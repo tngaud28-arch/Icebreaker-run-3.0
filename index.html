@@ -1,39 +1,151 @@
 <!doctype html>
 <html lang="en">
 <head>
-    <meta charset="utf-8">
-    <meta
-        name="viewport"
-        content="width=device-width,initial-scale=1,viewport-fit=cover"
-    >
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071421">
 
-    <title>Icebreaker Run</title>
+  <title>Icebreaker Run</title>
 
-    <link rel="stylesheet" href="./style.css">
+  <!-- style.css is in the root of the repository -->
+  <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
-    <div id="app">
+  <div id="app">
 
-        <canvas id="gameCanvas"></canvas>
+    <!-- Game canvas -->
+    <canvas id="gameCanvas"></canvas>
 
-        <!-- HUD -->
-        <div id="hud" class="hidden">
-            <div class="score">
-                <small>SCORE</small>
-                <b id="score">0</b>
+    <!-- In-game HUD -->
+    <div id="hud" class="hidden">
+      <div class="score">
+        <small>SCORE</small>
+        <b id="score">0</b>
 
-                <small>
-                    BEST
-                    <i id="best">0</i>
-                </small>
-            </div>
+        <small>
+          BEST
+          <i id="best">0</i>
+        </small>
+      </div>
 
-            <div>
-                <button id="sound" type="button">🔊</button>
-                <button id="pause" type="button">Ⅱ</button>
-            </div>
+      <div>
+        <button id="sound" type="button" aria-label="Sound">
+          🔊
+        </button>
+
+        <button id="pause" type="button" aria-label="Pause">
+          Ⅱ
+        </button>
+      </div>
+    </div>
+
+    <!-- Touch controls -->
+    <div id="touch" class="hidden">
+      <button id="left" type="button" aria-label="Move left">
+        ◀
+      </button>
+
+      <button id="right" type="button" aria-label="Move right">
+        ▶
+      </button>
+    </div>
+
+    <!-- All game screens -->
+    <div id="screens">
+
+      <!-- Main menu -->
+      <section id="menu" class="panel">
+        <h1>
+          ICEBREAKER
+          <em>RUN</em>
+        </h1>
+
+        <p>Dodge the frozen unknown.</p>
+
+        <button id="play" class="primary" type="button">
+          PLAY
+        </button>
+
+        <div class="record">
+          HIGH SCORE
+          <b id="menuBest">0</b>
         </div>
+
+        <button id="settings" class="secondary" type="button">
+          ⚙ SETTINGS
+        </button>
+      </section>
+
+      <!-- Pause screen -->
+      <section id="paused" class="panel hidden">
+        <h2>PAUSED</h2>
+
+        <button id="resume" class="primary" type="button">
+          RESUME
+        </button>
+
+        <button class="secondary home" type="button">
+          MAIN MENU
+        </button>
+      </section>
+
+      <!-- Game over screen -->
+      <section id="over" class="panel hidden">
+        <h2>GAME OVER</h2>
+
+        <strong id="newBest" class="hidden">
+          NEW HIGH SCORE!
+        </strong>
+
+        <div class="results">
+          SCORE
+          <b id="finalScore">0</b>
+
+          BEST
+          <b id="finalBest">0</b>
+        </div>
+
+        <button id="again" class="primary" type="button">
+          PLAY AGAIN
+        </button>
+
+        <button class="secondary home" type="button">
+          MAIN MENU
+        </button>
+      </section>
+
+      <!-- Settings -->
+      <section id="settingsScreen" class="panel hidden">
+        <h2>SETTINGS</h2>
+
+        <label>
+          Sound
+          <input id="soundSetting" type="checkbox" checked>
+        </label>
+
+        <label>
+          Touch Buttons
+          <input id="controlsSetting" type="checkbox" checked>
+        </label>
+
+        <label>
+          Reduced Effects
+          <input id="effectsSetting" type="checkbox">
+        </label>
+
+        <button id="back" class="secondary" type="button">
+          BACK
+        </button>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- main.js is in the root of the repository -->
+  <script type="module" src="main.js"></script>
+</body>
+</html>
 
         <!-- Touch Controls -->
         <div id="touch" class="hidden">
