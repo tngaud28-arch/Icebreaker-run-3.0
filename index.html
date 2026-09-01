@@ -3,6 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#071421">
   <title>Icebreaker Run</title>
   <link rel="stylesheet" href="./style.css">
 </head>
@@ -19,22 +20,81 @@
       </div>
 
       <div>
-        <button id="sound">🔊</button>
-        <button id="pause">Ⅱ</button>
+        <button id="sound" type="button">🔊</button>
+        <button id="pause" type="button">Ⅱ</button>
       </div>
     </div>
 
     <div id="touch" class="hidden">
-      <button id="left">◀</button>
-      <button id="right">▶</button>
+      <button id="left" type="button">◀</button>
+      <button id="right" type="button">▶</button>
     </div>
 
     <div id="screens">
       <section id="menu" class="panel">
         <h1>ICEBREAKER <em>RUN</em></h1>
         <p>Dodge the frozen unknown.</p>
-        <button id="play" class="primary">PLAY</button>
-        <div class="record">HIGH SCORE <b id="menuBest">0</b></div>
+        <button id="play" class="primary" type="button">PLAY</button>
+
+        <div class="record">
+          HIGH SCORE <b id="menuBest">0</b>
+        </div>
+
+        <button id="settings" class="secondary" type="button">
+          ⚙ SETTINGS
+        </button>
+      </section>
+
+      <section id="paused" class="panel hidden">
+        <h2>PAUSED</h2>
+        <button id="resume" class="primary" type="button">RESUME</button>
+        <button class="secondary home" type="button">MAIN MENU</button>
+      </section>
+
+      <section id="over" class="panel hidden">
+        <h2>GAME OVER</h2>
+        <strong id="newBest" class="hidden">NEW HIGH SCORE!</strong>
+
+        <div class="results">
+          SCORE <b id="finalScore">0</b>
+          BEST <b id="finalBest">0</b>
+        </div>
+
+        <button id="again" class="primary" type="button">
+          PLAY AGAIN
+        </button>
+
+        <button class="secondary home" type="button">
+          MAIN MENU
+        </button>
+      </section>
+
+      <section id="settingsScreen" class="panel hidden">
+        <h2>SETTINGS</h2>
+
+        <label>
+          Sound
+          <input id="soundSetting" type="checkbox" checked>
+        </label>
+
+        <label>
+          Touch Buttons
+          <input id="controlsSetting" type="checkbox" checked>
+        </label>
+
+        <label>
+          Reduced Effects
+          <input id="effectsSetting" type="checkbox">
+        </label>
+
+        <button id="back" class="secondary" type="button">BACK</button>
+      </section>
+    </div>
+  </div>
+
+  <script type="module" src="./main.js"></script>
+</body>
+</html>        <div class="record">HIGH SCORE <b id="menuBest">0</b></div>
         <button id="settings" class="secondary">⚙ SETTINGS</button>
       </section>
 
