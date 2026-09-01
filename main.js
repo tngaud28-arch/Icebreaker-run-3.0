@@ -7,25 +7,26 @@ import { UIManager } from './UIManager.js';
 import { Game } from './Game.js';
 import { State } from './GameState.js';
 
-const $ = id => document.getElementById(id);
-
-const canvas = $('gameCanvas');
+const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
 
-const store = new StorageManager();
-const score = new ScoreManager(store);
+const storage = new StorageManager();
+const score = new ScoreManager(storage);
 const audio = new AudioManager();
 const ui = new UIManager();
 const renderer = new Renderer(ctx);
+
 const game = new Game(score, audio, renderer);
 
-let settings = store.get('icebreaker.settings', {
+let lastTime = 0;
+
+const settings = storage.get('icebreaker.settings', {
   sound: true,
   controls: true,
   effects: false
 });
 
-let last = 0;
+audio.enabled = settings.sound;
 
 function resize() {
   const dpr = Math.min(window.devicePixelRatio || 1, 2);
@@ -39,41 +40,45 @@ function resize() {
   game.resize();
 }
 
-function refresh() {
-  $('best').textContent = score.high;
-  $('menuBest').textContent = score.high;
-  $('score').textContent = score.score;
-  $('sound').textContent = audio.enabled ? '🔊' : '🔇';
+function updateUI() {
+  document.getElementById('score').textContent = score.score;
+  document.getElementById('best').textContent = score.high;
+  document.getElementById('menuBest').textContent = score.high;
+
+  document.getElementById('sound').textContent =
+    audio.enabled ? '🔊' : '🔇';
 }
 
-function menu() {
+function showMenu() {
   game.state = State.MENU;
 
   ui.show('menu');
   ui.hud(false);
   ui.touch(false);
 
-  refresh();
+  updateUI();
 }
 
-function start() {
+function startGame() {
   game.start();
 
   ui.show(null);
   ui.hud(true);
   ui.touch(settings.controls);
 
-  refresh();
+  updateUI();
 }
 
-function pause() {
+function togglePause() {
   game.pause();
 
   if (game.state === State.PAUSED) {
     ui.show('paused');
+    ui.hud(false);
     ui.touch(false);
   } else if (game.state === State.PLAYING) {
     ui.show(null);
+    ui.hud(true);
     ui.touch(settings.controls);
   }
 }
@@ -81,79 +86,69 @@ function pause() {
 new InputManager(
   canvas,
   direction => game.move(direction),
-  pause
+  togglePause
 );
 
-// Main buttons
-$('play').addEventListener('click', start);
-$('again').addEventListener('click', start);
-$('pause').addEventListener('click', pause);
-$('resume').addEventListener('click', pause);
+document.getElementById('play')
+  .addEventListener('click', startGame);
 
-$('left').addEventListener('click', () => game.move(-1));
-$('right').addEventListener('click', () => game.move(1));
+document.getElementById('again')
+  .addEventListener('click', startGame);
 
-$('sound').addEventListener('click', () => {
-  audio.enabled = !audio.enabled;
-  refresh();
-});
+document.getElementById('pause')
+  .addEventListener('click', togglePause);
 
-document.querySelectorAll('.home').forEach(button => {
-  button.addEventListener('click', menu);
-});
+document.getElementById('resume')
+  .addEventListener('click', togglePause);
 
-// Settings
-$('settings').addEventListener('click', () => {
-  game.state = State.SETTINGS;
-  ui.show('settingsScreen');
-});
+document.getElementById('left')
+  .addEventListener('click', () => game.move(-1));
 
-$('back').addEventListener('click', menu);
+document.getElementById('right')
+  .addEventListener('click', () => game.move(1));
 
-$('soundSetting').checked = settings.sound;
-$('controlsSetting').checked = settings.controls;
-$('effectsSetting').checked = settings.effects;
+document.getElementById('sound')
+  .addEventListener('click', () => {
+    audio.enabled = !audio.enabled;
+    updateUI();
+  });
 
-function saveSettings() {
-  settings = {
-    sound: $('soundSetting').checked,
-    controls: $('controlsSetting').checked,
-    effects: $('effectsSetting').checked
-  };
+document.getElementById('settings')
+  .addEventListener('click', () => {
+    game.state = State.SETTINGS;
+    ui.show('settingsScreen');
+    ui.hud(false);
+    ui.touch(false);
+  });
 
-  audio.enabled = settings.sound;
+document.getElementById('back')
+  .addEventListener('click', showMenu);
 
-  store.set('icebreaker.settings', settings);
-
-  refresh();
-}
-
-$('soundSetting').addEventListener('change', saveSettings);
-$('controlsSetting').addEventListener('change', saveSettings);
-$('effectsSetting').addEventListener('change', saveSettings);
-
-audio.enabled = settings.sound;
+document.querySelectorAll('.home')
+  .forEach(button => {
+    button.addEventListener('click', showMenu);
+  });
 
 window.addEventListener('resize', resize);
 
 document.addEventListener('visibilitychange', () => {
-  if (document.hidden && game.state === State.PLAYING) {
-    pause();
+  if (
+    document.hidden &&
+    game.state === State.PLAYING
+  ) {
+    togglePause();
   }
 });
 
-resize();
-menu();
-
-function loop(timestamp) {
+function gameLoop(timestamp) {
   const dt = Math.min(
     0.05,
-    (timestamp - last) / 1000 || 0
+    (timestamp - lastTime) / 1000 || 0
   );
 
-  last = timestamp;
+  lastTime = timestamp;
 
-  const newHigh = game.update(dt);
+  const newBest = game.update(dt);
 
   renderer.draw(
     timestamp / 1000,
@@ -161,26 +156,33 @@ function loop(timestamp) {
     game.boat
   );
 
-  refresh();
+  updateUI();
 
   if (
     game.state === State.GAME_OVER &&
-    $('over').classList.contains('hidden')
+    !document.getElementById('over').classList.contains('hidden')
   ) {
-    $('finalScore').textContent = score.score;
-    $('finalBest').textContent = score.high;
+    // already showing
+  }
 
-    $('newBest').classList.toggle(
-      'hidden',
-      !newHigh
-    );
+  if (
+    game.state === State.GAME_OVER &&
+    document.getElementById('finalScore').textContent !== String(score.score)
+  ) {
+    document.getElementById('finalScore').textContent = score.score;
+    document.getElementById('finalBest').textContent = score.high;
+
+    document.getElementById('newBest')
+      .classList.toggle('hidden', !newBest);
 
     ui.show('over');
     ui.hud(false);
     ui.touch(false);
   }
 
-  requestAnimationFrame(loop);
+  requestAnimationFrame(gameLoop);
 }
 
-requestAnimationFrame(loop);
+resize();
+showMenu();
+requestAnimationFrame(gameLoop);
