@@ -1,6 +1,73 @@
-import{Renderer}from'./rendering/Renderer.js';import{StorageManager}from'./systems/StorageManager.js';import{ScoreManager}from'./systems/ScoreManager.js';import{AudioManager}from'./systems/AudioManager.js';import{InputManager}from'./systems/InputManager.js';import{UIManager}from'./ui/UIManager.js';import{Game}from'./game/Game.js';import{State}from'./game/GameState.js';
-const $=x=>document.getElementById(x),canvas=$('gameCanvas'),ctx=canvas.getContext('2d'),store=new StorageManager(),score=new ScoreManager(store),audio=new AudioManager(),ui=new UIManager(),renderer=new Renderer(ctx),game=new Game(score,audio,renderer);let settings=store.get('icebreaker.settings',{sound:true,controls:true,effects:false}),last=0;
-function resize(){let d=Math.min(devicePixelRatio||1,2);renderer.resize(innerWidth,innerHeight,d);game.resize()}function refresh(){['best','menuBest'].forEach(x=>$(x).textContent=score.high);$('score').textContent=score.score;$('sound').textContent=audio.enabled?'🔊':'🔇'}function menu(){game.state=State.MENU;ui.show('menu');ui.hud(false);ui.touch(false);refresh()}function start(){game.start();ui.show(null);ui.hud(true);ui.touch(settings.controls);refresh()}function pause(){game.pause();if(game.state===State.PAUSED){ui.show('paused');ui.touch(false)}else if(game.state===State.PLAYING){ui.show(null);ui.touch(settings.controls)}}new InputManager(canvas,d=>game.move(d),pause);
-$('play').onclick=start;$('again').onclick=start;$('pause').onclick=pause;$('resume').onclick=pause;$('left').onclick=()=>game.move(-1);$('right').onclick=()=>game.move(1);$('sound').onclick=()=>{audio.enabled=!audio.enabled;refresh()};document.querySelectorAll('.home').forEach(x=>x.onclick=menu);
-$('settings').onclick=()=>{game.state=State.SETTINGS;ui.show('settingsScreen')};$('back').onclick=menu;$('soundSetting').checked=settings.sound;$('controlsSetting').checked=settings.controls;$('effectsSetting').checked=settings.effects;function saveSettings(){settings={sound:$('soundSetting').checked,controls:$('controlsSetting').checked,effects:$('effectsSetting').checked};audio.enabled=settings.sound;store.set('icebreaker.settings',settings);refresh()}['soundSetting','controlsSetting','effectsSetting'].forEach(x=>$(x).onchange=saveSettings);audio.enabled=settings.sound;
-addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{if(document.hidden&&game.state===State.PLAYING)pause()});resize();menu();function loop(t){let dt=Math.min(.05,(t-last)/1000||0);last=t;let newHigh=game.update(dt);renderer.draw(t/1000,game.icebergs,game.boat);refresh();if(game.state===State.GAME_OVER&&!$('over').classList.contains('hidden')){}else if(game.state===State.GAME_OVER){$('finalScore').textContent=score.score;$('finalBest').textContent=score.high;$('newBest').classList.toggle('hidden',!newHigh);ui.show('over');ui.hud(false);ui.touch(false)}requestAnimationFrame(loop)}requestAnimationFrame(loop);
+```js
+import { Renderer } from './Renderer.js';
+import { StorageManager } from './StorageManager.js';
+import { ScoreManager } from './ScoreManager.js';
+import { AudioManager } from './AudioManager.js';
+import { InputManager } from './InputManager.js';
+import { UIManager } from './UIManager.js';
+import { Game } from './Game.js';
+import { State } from './GameState.js';
+
+const canvas = document.getElementById('gameCanvas');
+
+if (!canvas) {
+    throw new Error('Could not find #gameCanvas in index.html');
+}
+
+const storage = new StorageManager();
+const scoreManager = new ScoreManager();
+const audioManager = new AudioManager();
+const inputManager = new InputManager();
+const uiManager = new UIManager();
+const renderer = new Renderer(canvas);
+
+const game = new Game({
+    renderer,
+    storage,
+    scoreManager,
+    audioManager,
+    inputManager,
+    uiManager
+});
+
+function gameLoop(timestamp) {
+    game.update(timestamp);
+    game.render();
+    requestAnimationFrame(gameLoop);
+}
+
+function startGame() {
+    if (typeof game.start === 'function') {
+        game.start();
+    } else if (typeof game.setState === 'function') {
+        game.setState(State.PLAYING);
+    }
+}
+
+function restartGame() {
+    if (typeof game.restart === 'function') {
+        game.restart();
+    } else {
+        startGame();
+    }
+}
+
+window.addEventListener('load', () => {
+    if (typeof game.init === 'function') {
+        game.init();
+    }
+
+    requestAnimationFrame(gameLoop);
+});
+
+window.addEventListener('error', (event) => {
+    console.error('Game error:', event.error || event.message);
+});
+
+window.addEventListener('unhandledrejection', (event) => {
+    console.error('Unhandled promise rejection:', event.reason);
+});
+
+window.startGame = startGame;
+window.restartGame = restartGame;
+```
