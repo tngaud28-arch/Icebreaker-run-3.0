@@ -1,0 +1,1 @@
+export function collides(boat,o,w){return Math.abs(boat.x-o.x)<o.size*.48+w*.025&&Math.abs(boat.y-o.y)<o.size*.43+25}

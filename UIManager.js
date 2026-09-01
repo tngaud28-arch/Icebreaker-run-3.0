@@ -1,0 +1,1 @@
+export class UIManager{constructor(){this.ids=['menu','paused','over','settingsScreen']}show(id){this.ids.forEach(x=>document.getElementById(x).classList.add('hidden'));if(id)document.getElementById(id).classList.remove('hidden')}hud(on){document.getElementById('hud').classList.toggle('hidden',!on)}touch(on){document.getElementById('touch').classList.toggle('hidden',!on)}}

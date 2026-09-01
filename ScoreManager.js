@@ -1,0 +1,1 @@
+export class ScoreManager{constructor(storage){this.s=storage;this.high=this.s.get('icebreaker.high',0);this.score=0}reset(){this.score=0}update(t){this.score=Math.floor(t*100)}finish(){if(this.score>this.high){this.high=this.score;this.s.set('icebreaker.high',this.high);return true}return false}}
