@@ -1,1 +1,124 @@
-import{State}from'./GameState.js';import{Boat}from'../entities/Boat.js';import{Spawner}from'../systems/Spawner.js';import{collides}from'./Collision.js';export class Game{constructor(score,audio,renderer){this.score=score;this.audio=audio;this.renderer=renderer;this.state=State.MENU;this.boat=new Boat();this.icebergs=[];this.time=0;this.speed=250;this.spawner=new Spawner(i=>this.laneX(i))}laneX(i){return this.renderer.w*(.2+.3*i)}resize(){this.boat.resize(this.renderer.w,this.renderer.h,i=>this.laneX(i))}start(){this.state=State.PLAYING;this.time=0;this.speed=250;this.icebergs=[];this.score.reset();this.spawner.reset();this.boat.lane=1;this.resize()}move(d){if(this.state===State.PLAYING){this.boat.move(d,i=>this.laneX(i));this.audio.tone(260)}}pause(){if(this.state===State.PLAYING)this.state=State.PAUSED;else if(this.state===State.PAUSED)this.state=State.PLAYING}update(dt){if(this.state!==State.PLAYING)return;this.time+=dt;this.speed=Math.min(700,250+this.time*5);this.score.update(this.time);this.boat.update(dt);this.spawner.update(dt,this.time,this.renderer.w,this.renderer.h,this.speed,this.icebergs);this.icebergs.forEach(o=>o.update(dt,this.speed));this.icebergs=this.icebergs.filter(o=>o.y<this.renderer.h+o.size);if(this.icebergs.some(o=>collides(this.boat,o,this.renderer.w))){this.state=State.GAME_OVER;this.audio.tone(80,.25);return this.score.finish()}return false}}
+import { State } from './GameState.js';
+import { Boat } from './Boat.js';
+import { Spawner } from './Spawner.js';
+import { collides } from './Collision.js';
+
+export class Game {
+  constructor(score, audio, renderer) {
+    this.score = score;
+    this.audio = audio;
+    this.renderer = renderer;
+
+    this.state = State.MENU;
+
+    this.boat = new Boat();
+    this.icebergs = [];
+
+    this.time = 0;
+    this.speed = 250;
+
+    this.spawner = new Spawner(
+      lane => this.laneX(lane)
+    );
+  }
+
+  laneX(lane) {
+    return this.renderer.w * (0.2 + 0.3 * lane);
+  }
+
+  resize() {
+    this.boat.resize(
+      this.renderer.w,
+      this.renderer.h,
+      lane => this.laneX(lane)
+    );
+  }
+
+  start() {
+    this.state = State.PLAYING;
+    this.time = 0;
+    this.speed = 250;
+
+    this.icebergs = [];
+
+    this.score.reset();
+    this.spawner.reset();
+
+    this.boat.lane = 1;
+
+    this.resize();
+  }
+
+  move(direction) {
+    if (this.state !== State.PLAYING) return;
+
+    this.boat.move(
+      direction,
+      lane => this.laneX(lane)
+    );
+
+    this.audio.tone(260);
+  }
+
+  pause() {
+    if (this.state === State.PLAYING) {
+      this.state = State.PAUSED;
+    } else if (this.state === State.PAUSED) {
+      this.state = State.PLAYING;
+    }
+  }
+
+  update(dt) {
+    if (this.state !== State.PLAYING) {
+      return false;
+    }
+
+    this.time += dt;
+
+    this.speed = Math.min(
+      700,
+      250 + this.time * 5
+    );
+
+    this.score.update(this.time);
+    this.boat.update(dt);
+
+    this.spawner.update(
+      dt,
+      this.time,
+      this.renderer.w,
+      this.renderer.h,
+      this.speed,
+      this.icebergs
+    );
+
+    this.icebergs.forEach(iceberg => {
+      iceberg.update(dt, this.speed);
+    });
+
+    this.icebergs = this.icebergs.filter(
+      iceberg =>
+        iceberg.y <
+        this.renderer.h + iceberg.size
+    );
+
+    const hit = this.icebergs.some(
+      iceberg =>
+        collides(
+          this.boat,
+          iceberg,
+          this.renderer.w
+        )
+    );
+
+    if (hit) {
+      this.state = State.GAME_OVER;
+
+      this.audio.tone(80, 0.25);
+
+      return this.score.finish();
+    }
+
+    return false;
+  }
+}s';export class Game{constructor(score,audio,renderer){this.score=score;this.audio=audio;this.renderer=renderer;this.state=State.MENU;this.boat=new Boat();this.icebergs=[];this.time=0;this.speed=250;this.spawner=new Spawner(i=>this.laneX(i))}laneX(i){return this.renderer.w*(.2+.3*i)}resize(){this.boat.resize(this.renderer.w,this.renderer.h,i=>this.laneX(i))}start(){this.state=State.PLAYING;this.time=0;this.speed=250;this.icebergs=[];this.score.reset();this.spawner.reset();this.boat.lane=1;this.resize()}move(d){if(this.state===State.PLAYING){this.boat.move(d,i=>this.laneX(i));this.audio.tone(260)}}pause(){if(this.state===State.PLAYING)this.state=State.PAUSED;else if(this.state===State.PAUSED)this.state=State.PLAYING}update(dt){if(this.state!==State.PLAYING)return;this.time+=dt;this.speed=Math.min(700,250+this.time*5);this.score.update(this.time);this.boat.update(dt);this.spawner.update(dt,this.time,this.renderer.w,this.renderer.h,this.speed,this.icebergs);this.icebergs.forEach(o=>o.update(dt,this.speed));this.icebergs=this.icebergs.filter(o=>o.y<this.renderer.h+o.size);if(this.icebergs.some(o=>collides(this.boat,o,this.renderer.w))){this.state=State.GAME_OVER;this.audio.tone(80,.25);return this.score.finish()}return false}}
