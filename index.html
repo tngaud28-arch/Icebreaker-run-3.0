@@ -3,38 +3,72 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-  <meta name="theme-color" content="#071421">
-
   <title>Icebreaker Run</title>
-
-  <!-- style.css is in the root of the repository -->
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="./style.css">
 </head>
 
 <body>
   <div id="app">
-
-    <!-- Game canvas -->
     <canvas id="gameCanvas"></canvas>
 
-    <!-- In-game HUD -->
     <div id="hud" class="hidden">
       <div class="score">
         <small>SCORE</small>
         <b id="score">0</b>
-
-        <small>
-          BEST
-          <i id="best">0</i>
-        </small>
+        <small>BEST <i id="best">0</i></small>
       </div>
 
       <div>
-        <button id="sound" type="button" aria-label="Sound">
-          🔊
-        </button>
+        <button id="sound">🔊</button>
+        <button id="pause">Ⅱ</button>
+      </div>
+    </div>
 
-        <button id="pause" type="button" aria-label="Pause">
+    <div id="touch" class="hidden">
+      <button id="left">◀</button>
+      <button id="right">▶</button>
+    </div>
+
+    <div id="screens">
+      <section id="menu" class="panel">
+        <h1>ICEBREAKER <em>RUN</em></h1>
+        <p>Dodge the frozen unknown.</p>
+        <button id="play" class="primary">PLAY</button>
+        <div class="record">HIGH SCORE <b id="menuBest">0</b></div>
+        <button id="settings" class="secondary">⚙ SETTINGS</button>
+      </section>
+
+      <section id="paused" class="panel hidden">
+        <h2>PAUSED</h2>
+        <button id="resume" class="primary">RESUME</button>
+        <button class="secondary home">MAIN MENU</button>
+      </section>
+
+      <section id="over" class="panel hidden">
+        <h2>GAME OVER</h2>
+        <strong id="newBest" class="hidden">NEW HIGH SCORE!</strong>
+        <div class="results">
+          SCORE <b id="finalScore">0</b>
+          BEST <b id="finalBest">0</b>
+        </div>
+        <button id="again" class="primary">PLAY AGAIN</button>
+        <button class="secondary home">MAIN MENU</button>
+      </section>
+
+      <section id="settingsScreen" class="panel hidden">
+        <h2>SETTINGS</h2>
+        <label>Sound <input id="soundSetting" type="checkbox" checked></label>
+        <label>Touch Buttons <input id="controlsSetting" type="checkbox" checked></label>
+        <label>Reduced Effects <input id="effectsSetting" type="checkbox"></label>
+        <button id="back" class="secondary">BACK</button>
+      </section>
+    </div>
+  </div>
+
+  <!-- IMPORTANT: main.js is in the repository root -->
+  <script type="module" src="./main.js"></script>
+</body>
+</html>        <button id="pause" type="button" aria-label="Pause">
           Ⅱ
         </button>
       </div>
