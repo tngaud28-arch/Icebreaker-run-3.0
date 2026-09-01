@@ -1,4 +1,3 @@
-```js
 import { Renderer } from './Renderer.js';
 import { StorageManager } from './StorageManager.js';
 import { ScoreManager } from './ScoreManager.js';
@@ -8,66 +7,180 @@ import { UIManager } from './UIManager.js';
 import { Game } from './Game.js';
 import { State } from './GameState.js';
 
-const canvas = document.getElementById('gameCanvas');
+const $ = id => document.getElementById(id);
 
-if (!canvas) {
-    throw new Error('Could not find #gameCanvas in index.html');
-}
+const canvas = $('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-const storage = new StorageManager();
-const scoreManager = new ScoreManager();
-const audioManager = new AudioManager();
-const inputManager = new InputManager();
-const uiManager = new UIManager();
-const renderer = new Renderer(canvas);
+const store = new StorageManager();
+const score = new ScoreManager(store);
+const audio = new AudioManager();
+const ui = new UIManager();
+const renderer = new Renderer(ctx);
+const game = new Game(score, audio, renderer);
 
-const game = new Game({
-    renderer,
-    storage,
-    scoreManager,
-    audioManager,
-    inputManager,
-    uiManager
+let settings = store.get('icebreaker.settings', {
+  sound: true,
+  controls: true,
+  effects: false
 });
 
-function gameLoop(timestamp) {
-    game.update(timestamp);
-    game.render();
-    requestAnimationFrame(gameLoop);
+let last = 0;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  renderer.resize(
+    window.innerWidth,
+    window.innerHeight,
+    dpr
+  );
+
+  game.resize();
 }
 
-function startGame() {
-    if (typeof game.start === 'function') {
-        game.start();
-    } else if (typeof game.setState === 'function') {
-        game.setState(State.PLAYING);
-    }
+function refresh() {
+  $('best').textContent = score.high;
+  $('menuBest').textContent = score.high;
+  $('score').textContent = score.score;
+  $('sound').textContent = audio.enabled ? '🔊' : '🔇';
 }
 
-function restartGame() {
-    if (typeof game.restart === 'function') {
-        game.restart();
-    } else {
-        startGame();
-    }
+function menu() {
+  game.state = State.MENU;
+
+  ui.show('menu');
+  ui.hud(false);
+  ui.touch(false);
+
+  refresh();
 }
 
-window.addEventListener('load', () => {
-    if (typeof game.init === 'function') {
-        game.init();
-    }
+function start() {
+  game.start();
 
-    requestAnimationFrame(gameLoop);
+  ui.show(null);
+  ui.hud(true);
+  ui.touch(settings.controls);
+
+  refresh();
+}
+
+function pause() {
+  game.pause();
+
+  if (game.state === State.PAUSED) {
+    ui.show('paused');
+    ui.touch(false);
+  } else if (game.state === State.PLAYING) {
+    ui.show(null);
+    ui.touch(settings.controls);
+  }
+}
+
+new InputManager(
+  canvas,
+  direction => game.move(direction),
+  pause
+);
+
+// Main buttons
+$('play').addEventListener('click', start);
+$('again').addEventListener('click', start);
+$('pause').addEventListener('click', pause);
+$('resume').addEventListener('click', pause);
+
+$('left').addEventListener('click', () => game.move(-1));
+$('right').addEventListener('click', () => game.move(1));
+
+$('sound').addEventListener('click', () => {
+  audio.enabled = !audio.enabled;
+  refresh();
 });
 
-window.addEventListener('error', (event) => {
-    console.error('Game error:', event.error || event.message);
+document.querySelectorAll('.home').forEach(button => {
+  button.addEventListener('click', menu);
 });
 
-window.addEventListener('unhandledrejection', (event) => {
-    console.error('Unhandled promise rejection:', event.reason);
+// Settings
+$('settings').addEventListener('click', () => {
+  game.state = State.SETTINGS;
+  ui.show('settingsScreen');
 });
 
-window.startGame = startGame;
-window.restartGame = restartGame;
-```
+$('back').addEventListener('click', menu);
+
+$('soundSetting').checked = settings.sound;
+$('controlsSetting').checked = settings.controls;
+$('effectsSetting').checked = settings.effects;
+
+function saveSettings() {
+  settings = {
+    sound: $('soundSetting').checked,
+    controls: $('controlsSetting').checked,
+    effects: $('effectsSetting').checked
+  };
+
+  audio.enabled = settings.sound;
+
+  store.set('icebreaker.settings', settings);
+
+  refresh();
+}
+
+$('soundSetting').addEventListener('change', saveSettings);
+$('controlsSetting').addEventListener('change', saveSettings);
+$('effectsSetting').addEventListener('change', saveSettings);
+
+audio.enabled = settings.sound;
+
+window.addEventListener('resize', resize);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden && game.state === State.PLAYING) {
+    pause();
+  }
+});
+
+resize();
+menu();
+
+function loop(timestamp) {
+  const dt = Math.min(
+    0.05,
+    (timestamp - last) / 1000 || 0
+  );
+
+  last = timestamp;
+
+  const newHigh = game.update(dt);
+
+  renderer.draw(
+    timestamp / 1000,
+    game.icebergs,
+    game.boat
+  );
+
+  refresh();
+
+  if (
+    game.state === State.GAME_OVER &&
+    $('over').classList.contains('hidden')
+  ) {
+    $('finalScore').textContent = score.score;
+    $('finalBest').textContent = score.high;
+
+    $('newBest').classList.toggle(
+      'hidden',
+      !newHigh
+    );
+
+    ui.show('over');
+    ui.hud(false);
+    ui.touch(false);
+  }
+
+  requestAnimationFrame(loop);
+}
+
+requestAnimationFrame(loop);
